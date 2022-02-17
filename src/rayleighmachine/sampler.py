@@ -21,20 +21,15 @@ References:
 """
 
 import argparse
-from re import M
-import beanmachine.ppl as bm
 import logging
 import sys
-from beanmachine.ppl.inference.proposer.base_single_site_proposer import BaseSingleSiteMHProposer
-from beanmachine.ppl.inference.single_site_inference import SingleSiteInference
+
+import beanmachine.ppl as bm
 import torch
 import torch.distributions as dist
-from typing import List, Set
-from beanmachine.ppl.inference.base_inference import BaseInference
-from beanmachine.ppl.inference.proposer.base_proposer import (
-    BaseProposer,
-)
-from beanmachine.ppl.model.rv_identifier import RVIdentifier
+from beanmachine.ppl.inference.proposer.base_single_site_proposer import \
+    BaseSingleSiteMHProposer
+from beanmachine.ppl.inference.single_site_inference import SingleSiteInference
 from beanmachine.ppl.world import World
 
 from rayleighmachine import __version__
@@ -51,6 +46,7 @@ _logger = logging.getLogger(__name__)
 # Python scripts/interactive interpreter, e.g. via
 # `from rayleighmachine.skeleton import fib`,
 # when using this Python module as a library.
+
 
 class AddDeleteProposal(dist.Distribution):
     def __init__(self, state: torch.tensor):
@@ -80,20 +76,28 @@ class AddDeleteProposal(dist.Distribution):
         # constant log_prob to exclude from MH ratio
         return torch.tensor(0.0)
 
+
 class SRAddDeleteProposer(BaseSingleSiteMHProposer):
     "Assumes the only node ever sampled is the SR set-valued RV"
+
     def get_proposal_distribution(self, world: World) -> dist.Distribution:
         return AddDeleteProposal(world.get_variable(self.node).value)
 
+
 class SRAddDeleteInference(SingleSiteInference):
     """Add/Delete MH MCMC sampler for a SR set-valued measure"""
+
     def __init__(self) -> None:
         super().__init__(SRAddDeleteProposer)
 
+
 class LikelihoodDPP(dist.Distribution):
     "DPP with likelihood kernel L"
+
     def __init__(self, L: torch.tensor) -> None:
-        assert L.dim() == 2 and L.shape[0] == L.shape[1], "L must be a square PSD matrix"
+        assert (
+            L.dim() == 2 and L.shape[0] == L.shape[1]
+        ), "L must be a square PSD matrix"
         super().__init__()
 
         self.L = L
@@ -102,57 +106,32 @@ class LikelihoodDPP(dist.Distribution):
 
     def log_prob(self, state: torch.tensor):
         S = state == 1
-        L_S = self.L[S][:,S]
+        L_S = self.L[S][:, S]
         return torch.log(L_S.det() / self.Z)
 
 
-def sample_ad():
-    n, d = 100, 3
-    X = torch.tensor([
-        [1, 0, 0],
-        [0, 0, 0], # should never be sampled
-        [0, 1, 0],
-        [0, 0, 1],
-    ]).float().T
-    n, d = X.shape
+def sample_mcmc(L, num_samples, num_chains, **inference_args):
+    d = L.shape[0]
 
-    @bm.random_variable
-    def my_dpp():
-        return LikelihoodDPP(X.T @ X)
+    volume_sampling_rows = bm.random_variable(lambda: LikelihoodDPP(L=L))
 
-    torch.random.manual_seed(42)
-    import random; random.seed(42)
-
-    samples = SRAddDeleteInference().infer(
-        queries=[my_dpp()],
-        observations={},
-        num_samples=1000,
-        num_chains=1,
-        initialize_fn=lambda _: torch.randint(low=0, high=2, size=(d,))
-    ).get_chain(0)[my_dpp()]
+    samples = (
+        SRAddDeleteInference()
+        .infer(
+            queries=[volume_sampling_rows()],
+            observations={},
+            initialize_fn=lambda _: torch.randint(low=0, high=2, size=(d,)),
+            num_samples=num_samples,
+            num_chains=num_chains,
+            **inference_args,
+        )
+        .get_chain(0)[volume_sampling_rows()]
+    )
 
     print(f"Empirical marginals: {samples.float().mean(dim=0)}")
 
-    L = X.T @ X
     K = L @ torch.inverse(torch.eye(L.shape[0]) + L)
     print(f"Theoretical marginals: {K.diag()}")
-
-    bad_idxs = samples[:,1].nonzero(as_tuple=True)[0]
-    print(bad_idxs, samples[bad_idxs,...])
-def fib(n):
-    """Fibonacci example function
-
-    Args:
-      n (int): integer
-
-    Returns:
-      int: n-th Fibonacci number
-    """
-    assert n > 0
-    a, b = 1, 1
-    for _i in range(n - 1):
-        a, b = b, a + b
-    return a
 
 
 # ---- CLI ----
@@ -209,9 +188,9 @@ def setup_logging(loglevel):
 
 
 def main(args):
-    """Wrapper allowing :func:`fib` to be called with string arguments in a CLI fashion
+    """Wrapper allowing :func:`sample_mcmc` to be called with string arguments in a CLI fashion
 
-    Instead of returning the value from :func:`fib`, it prints the result to the
+    Instead of returning the value from :func:`sample_mcmc`, it prints the result to the
     ``stdout`` in a nicely formatted message.
 
     Args:
@@ -221,7 +200,17 @@ def main(args):
     args = parse_args(args)
     setup_logging(args.loglevel)
     _logger.debug("Starting crazy calculations...")
-    sample_ad()
+
+    X = torch.tensor(
+        [
+            [1, 0, 0],
+            [0, 0, 0],  # should never be sampled
+            [0, 1, 0],
+            [0, 0, 1],
+        ]
+    ).float()
+    L = X @ X.T
+    sample_mcmc(L=L, num_samples=1_000, num_chains=1)
     _logger.info("Script ends here")
 
 

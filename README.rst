@@ -23,6 +23,12 @@
         :alt: Twitter
         :target: https://twitter.com/RayleighMachine
 
+.. image:: https://api.cirrus-ci.com/github/feynmanliang/RayleighMachine.svg?branch=main
+    :alt: Built Status
+    :target: https://cirrus-ci.com/github/feynmanliang/RayleighMachine
+.. image:: https://readthedocs.org/projects/RayleighMachine/badge/?version=latest
+    :alt: ReadTheDocs
+    :target: https://RayleighMachine.readthedocs.io/en/stable/
 .. image:: https://img.shields.io/badge/-PyScaffold-005CA0?logo=pyscaffold
     :alt: Project generated with PyScaffold
     :target: https://pyscaffold.org/
@@ -34,10 +40,16 @@ RayleighMachine
 ===============
 
 
-    Add a short description here!
+    MCMC sampling of strongly Rayleigh measures over subsets
 
+Try it out on the CLI::
 
-A longer description of your project goes here...
+    python -m rayleighmachine.sampler
+
+Run the tests::
+
+    py.test
+
 
 
 .. _pyscaffold-notes:
