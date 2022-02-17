@@ -1,6 +1,6 @@
 import pytest
 
-from rayleighmachine.skeleton import fib, main
+from rayleighmachine.skeleton import fib, main, sample_ad
 
 __author__ = "Feynman Liang"
 __copyright__ = "Feynman Liang"
@@ -14,6 +14,10 @@ def test_fib():
     assert fib(7) == 13
     with pytest.raises(AssertionError):
         fib(-10)
+
+
+def test_mcmc():
+    print(sample_ad())
 
 
 def test_main(capsys):
