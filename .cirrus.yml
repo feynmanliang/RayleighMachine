@@ -1,6 +1,6 @@
 test_task:
   container:
-    image: pytorch/pytorch:latest
+    image: anibali/pytorch:1.10.2-nocuda
   test_script:
     - pip install tox
     - tox
