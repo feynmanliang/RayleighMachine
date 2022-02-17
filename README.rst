@@ -26,7 +26,7 @@
 .. image:: https://api.cirrus-ci.com/github/feynmanliang/RayleighMachine.svg?branch=main
     :alt: Built Status
     :target: https://cirrus-ci.com/github/feynmanliang/RayleighMachine
-.. image:: https://readthedocs.org/projects/RayleighMachine/badge/?version=latest
+.. image:: https://readthedocs.org/projects/rayleighmachine/badge/?version=latest
     :alt: ReadTheDocs
     :target: https://RayleighMachine.readthedocs.io/en/latest/
 .. image:: https://img.shields.io/badge/-PyScaffold-005CA0?logo=pyscaffold
