@@ -28,7 +28,7 @@
     :target: https://cirrus-ci.com/github/feynmanliang/RayleighMachine
 .. image:: https://readthedocs.org/projects/RayleighMachine/badge/?version=latest
     :alt: ReadTheDocs
-    :target: https://RayleighMachine.readthedocs.io/en/stable/
+    :target: https://RayleighMachine.readthedocs.io/en/latest/
 .. image:: https://img.shields.io/badge/-PyScaffold-005CA0?logo=pyscaffold
     :alt: Project generated with PyScaffold
     :target: https://pyscaffold.org/

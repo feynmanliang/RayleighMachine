@@ -2,4 +2,5 @@ test_task:
   container:
     image: python:latest
   test_script:
-    - pytest
+    - pip install tox
+    - tox
